@@ -3,6 +3,9 @@
 Clone from this repo: https://github.com/nearlyready/voice-blender
 - No PAT needed if cloning into VSCode SSH remote session
 
+See this similar project:
+- https://github.com/codename0og/codename-rvc-fork-4/blob/main/EXTRAS/model_blender_gui.py
+
 
 ## Andrii
 
