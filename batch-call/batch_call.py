@@ -1,21 +1,30 @@
 import openpyxl
-
-def batch_call(f, arg_dicts):
-    results = []
-    for kwargs in arg_dicts:
-        print(f"Calling {f.__name__} with arguments: {kwargs}")
-        results.append(f(**kwargs))  # unpack dict into arguments
-    return results
-
-
-def batch_call_from_xlsx(f, xlsx_path):
-    arg_dicts = extract_arg_dicts_from_xlsx(xlsx_path)
-
-    # Call the batch_call function with the list of dictionaries
-    return batch_call(f, arg_dicts)
-
-
+import csv
 import subprocess
+
+
+def extract_arg_dicts_from_xlsx(xlsx_path):
+    # Load the workbook and select the active worksheet
+    workbook = openpyxl.load_workbook(xlsx_path)
+    sheet = workbook.active
+
+    # Read the header row to get parameter names
+    headers = [cell.value for cell in sheet[1]]
+    arg_dicts = []
+    for row in sheet.iter_rows(min_row=2, values_only=True):
+        kwargs = {headers[i]: value for i, value in enumerate(row)}
+        arg_dicts.append(kwargs)
+
+    return arg_dicts
+
+def extract_arg_dicts_from_csv(csv_path):
+    arg_dicts = []
+    with open(csv_path, newline='', encoding='utf-8-sig') as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            arg_dicts.append(row)
+    return arg_dicts
+#--------
 
 def cli_call(base_cmd, arg_dict):
     """
@@ -45,30 +54,30 @@ def batch_cli_call(base_cmd, arg_dicts):
     for params in arg_dicts:
         cli_call(base_cmd, params)
 
+def batch_call(f, arg_dicts):
+    results = []
+    for kwargs in arg_dicts:
+        print(f"Calling {f.__name__} with arguments: {kwargs}")
+        results.append(f(**kwargs))  # unpack dict into arguments
+    return results
 
-
-def extract_arg_dicts_from_xlsx(xlsx_path):
-    # Load the workbook and select the active worksheet
-    workbook = openpyxl.load_workbook(xlsx_path)
-    sheet = workbook.active
-
-    # Read the header row to get parameter names
-    headers = [cell.value for cell in sheet[1]]
-    arg_dicts = []
-    for row in sheet.iter_rows(min_row=2, values_only=True):
-        kwargs = {headers[i]: value for i, value in enumerate(row)}
-        arg_dicts.append(kwargs)
-
-    return arg_dicts
-
+# -------
 
 def batch_cli_call_from_xlsx(base_cmd, xlsx_path):
-    """
-    Run the same CLI multiple times with different parameters from an XLSX file.
-    """
     arg_dicts = extract_arg_dicts_from_xlsx(xlsx_path)
-    batch_cli_call(base_cmd, arg_dicts)
+    return batch_cli_call(base_cmd, arg_dicts)
 
+def batch_call_from_xlsx(f, xlsx_path):
+    arg_dicts = extract_arg_dicts_from_xlsx(xlsx_path)
+    return batch_call(f, arg_dicts)
+
+def batch_cli_call_from_csv(base_cmd, csv_path):
+    arg_dicts = extract_arg_dicts_from_csv(csv_path)
+    return batch_cli_call(base_cmd, arg_dicts)
+
+def batch_call_from_csv(f, csv_path):
+    arg_dicts = extract_arg_dicts_from_csv(csv_path)
+    return batch_call(f, arg_dicts)
 
 if __name__ == "__main__":
     # Example usage
