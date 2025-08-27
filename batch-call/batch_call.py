@@ -4,6 +4,18 @@ import subprocess
 
 
 def extract_arg_dicts_from_xlsx(xlsx_path):
+    """
+    Extract argument dictionaries from an Excel file.
+    
+    Args:
+        xlsx_path (str): The file path to the Excel (.xlsx) file containing parameter data.
+                         The file should have parameter names in the first row as headers,
+                         with each subsequent row representing a set of parameters.
+    
+    Returns:
+        list: A list of dictionaries, where each dictionary contains parameter names as keys
+              and their values from the Excel file.
+    """
     # Load the workbook and select the active worksheet
     workbook = openpyxl.load_workbook(xlsx_path)
     sheet = workbook.active
@@ -18,6 +30,18 @@ def extract_arg_dicts_from_xlsx(xlsx_path):
     return arg_dicts
 
 def extract_arg_dicts_from_csv(csv_path):
+    """
+    Extract argument dictionaries from a CSV file.
+    
+    Args:
+        csv_path (str): The file path to the CSV file containing parameter data.
+                        The file should have parameter names in the first row as headers,
+                        with each subsequent row representing a set of parameters.
+    
+    Returns:
+        list: A list of dictionaries, where each dictionary contains parameter names as keys
+              and their values from the CSV file.
+    """
     arg_dicts = []
     with open(csv_path, newline='', encoding='utf-8-sig') as csvfile:
         reader = csv.DictReader(csvfile)
@@ -29,8 +53,18 @@ def extract_arg_dicts_from_csv(csv_path):
 def cli_call(base_cmd, arg_dict):
     """
     Run a command-line tool with parameters from a dictionary.
-    - base_cmd: list, e.g. ["python", "tools/infer_cli.py"]
-    - arg_dict: dict of {param_name: value}
+    
+    Args:
+        base_cmd (list): Base command to run as a list of strings.
+                         Example: ["python", "tools/infer_cli.py"]
+        arg_dict (dict): Dictionary of parameter names and values to be passed to the command.
+                         Keys are parameter names (without '--' prefix) and values are the parameter values.
+                         Example: {"input": "file.wav", "output": "result.wav"}
+                         If a value is None, the parameter will be skipped.
+    
+    Returns:
+        None: The function runs the command but does not return any value.
+              The command output will be displayed in the console.
     """
     cmd = list(base_cmd)  # copy base
     for k, v in arg_dict.items():
@@ -49,12 +83,37 @@ def cli_call(base_cmd, arg_dict):
 
 def batch_cli_call(base_cmd, arg_dicts):
     """
-    Run the same CLI multiple times with different parameters.
+    Run the same CLI command multiple times with different parameters.
+    
+    Args:
+        base_cmd (list): Base command to run as a list of strings.
+                         Example: ["python", "tools/infer_cli.py"]
+        arg_dicts (list): A list of dictionaries, where each dictionary contains parameter names as keys
+                          and their values to be passed to the command for each separate call.
+                          Example: [{"input": "file1.wav"}, {"input": "file2.wav"}]
+    
+    Returns:
+        None: The function runs the commands but does not return any value.
+              The command outputs will be displayed in the console.
     """
     for params in arg_dicts:
         cli_call(base_cmd, params)
 
 def batch_call(f, arg_dicts):
+    """
+    Call a function multiple times with different parameters and collect the results.
+    
+    Args:
+        f (callable): The function to call repeatedly. 
+                      This function should accept keyword arguments that match the keys in arg_dicts.
+        arg_dicts (list): A list of dictionaries, where each dictionary contains parameter names as keys
+                          and their values to be passed to the function for each separate call.
+                          Example: [{"a": 1, "b": 2}, {"a": 3, "b": 4}]
+    
+    Returns:
+        list: A list containing the return values from each function call.
+              The results are in the same order as the input arg_dicts.
+    """
     results = []
     for kwargs in arg_dicts:
         print(f"Calling {f.__name__} with arguments: {kwargs}")
@@ -64,18 +123,74 @@ def batch_call(f, arg_dicts):
 # -------
 
 def batch_cli_call_from_xlsx(base_cmd, xlsx_path):
+    """
+    Run a CLI command multiple times with parameters from an Excel file.
+    
+    Args:
+        base_cmd (list): Base command to run as a list of strings.
+                         Example: ["python", "tools/infer_cli.py"]
+        xlsx_path (str): The file path to the Excel (.xlsx) file containing parameter data.
+                         The file should have parameter names in the first row as headers,
+                         with each subsequent row representing a set of parameters.
+    
+    Returns:
+        None: The function runs the commands but does not return any value.
+              The command outputs will be displayed in the console.
+    """
     arg_dicts = extract_arg_dicts_from_xlsx(xlsx_path)
     return batch_cli_call(base_cmd, arg_dicts)
 
 def batch_call_from_xlsx(f, xlsx_path):
+    """
+    Call a function multiple times with parameters from an Excel file and collect the results.
+    
+    Args:
+        f (callable): The function to call repeatedly.
+                      This function should accept keyword arguments that match the column headers in the Excel file.
+        xlsx_path (str): The file path to the Excel (.xlsx) file containing parameter data.
+                         The file should have parameter names in the first row as headers,
+                         with each subsequent row representing a set of parameters.
+    
+    Returns:
+        list: A list containing the return values from each function call.
+              The results are in the same order as the rows in the Excel file.
+    """
     arg_dicts = extract_arg_dicts_from_xlsx(xlsx_path)
     return batch_call(f, arg_dicts)
 
 def batch_cli_call_from_csv(base_cmd, csv_path):
+    """
+    Run a CLI command multiple times with parameters from a CSV file.
+    
+    Args:
+        base_cmd (list): Base command to run as a list of strings.
+                         Example: ["python", "tools/infer_cli.py"]
+        csv_path (str): The file path to the CSV file containing parameter data.
+                        The file should have parameter names in the first row as headers,
+                        with each subsequent row representing a set of parameters.
+    
+    Returns:
+        None: The function runs the commands but does not return any value.
+              The command outputs will be displayed in the console.
+    """
     arg_dicts = extract_arg_dicts_from_csv(csv_path)
     return batch_cli_call(base_cmd, arg_dicts)
 
 def batch_call_from_csv(f, csv_path):
+    """
+    Call a function multiple times with parameters from a CSV file and collect the results.
+    
+    Args:
+        f (callable): The function to call repeatedly.
+                      This function should accept keyword arguments that match the column headers in the CSV file.
+        csv_path (str): The file path to the CSV file containing parameter data.
+                        The file should have parameter names in the first row as headers,
+                        with each subsequent row representing a set of parameters.
+    
+    Returns:
+        list: A list containing the return values from each function call.
+              The results are in the same order as the rows in the CSV file.
+    """
     arg_dicts = extract_arg_dicts_from_csv(csv_path)
     return batch_call(f, arg_dicts)
 
@@ -109,13 +224,3 @@ if __name__ == "__main__":
     # cli_xlsx_path = "tests/batch_call/cli_test.xlsx"
     # batch_cli_call_from_xlsx(base_cmd, cli_xlsx_path)
 
-    import inference
-    import batch_inference
-    xlsx_path = "inference_jobs_blends.xlsx"
-    xlsx_results = batch_call_from_xlsx(batch_inference.run_pipeline, xlsx_path)
-    print("Batch call results from XLSX:", xlsx_results)
-
-    # import blending
-    # xlsx_path = "blending_jobs.xlsx"
-    # xlsx_results = batch_call_from_xlsx(blending.run_pipeline, xlsx_path)
-    # print("Batch call results from XLSX:", xlsx_results)
